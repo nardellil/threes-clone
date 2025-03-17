@@ -159,27 +159,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if the game is over
     function isGameOver() {
         // Check if there are any empty cells
+        let hasEmptyCell = false;
         for (let i = 0; i < GRID_SIZE; i++) {
             for (let j = 0; j < GRID_SIZE; j++) {
                 if (grid[i][j] === null) {
-                    return false;
+                    hasEmptyCell = true;
+                    break;
                 }
             }
+            if (hasEmptyCell) break;
         }
         
-        // Check if there are any possible moves
+        if (hasEmptyCell) {
+            return false;
+        }
+        
+        // Check if there are any possible moves horizontally
         for (let i = 0; i < GRID_SIZE; i++) {
             for (let j = 0; j < GRID_SIZE - 1; j++) {
-                // Check horizontal moves
                 if (canCombine(grid[i][j], grid[i][j + 1])) {
                     return false;
                 }
             }
         }
         
+        // Check if there are any possible moves vertically
         for (let i = 0; i < GRID_SIZE - 1; i++) {
             for (let j = 0; j < GRID_SIZE; j++) {
-                // Check vertical moves
                 if (canCombine(grid[i][j], grid[i + 1][j])) {
                     return false;
                 }
@@ -246,16 +252,59 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (moved) {
             // Aggiorna la griglia con un leggero ritardo per permettere alle animazioni di essere visibili
-            updateGrid();
+            updateGridWithoutGameOver();
             
             // Aggiungi un nuovo tile dopo un breve ritardo
             setTimeout(() => {
                 addRandomTile();
                 generateNextTile();
+                
+                // Ora verifica il game over dopo aver aggiunto il nuovo tile
+                if (isGameOver()) {
+                    gameOver = true;
+                    gameMessage.classList.add('game-over');
+                    gameMessage.querySelector('p').textContent = 'Game Over!';
+                }
             }, 150);
         }
         
         return moved;
+    }
+
+    // Update the grid and UI after a move without checking game over
+    function updateGridWithoutGameOver() {
+        // Clear the tile container
+        tileContainer.innerHTML = '';
+        
+        // Create tile elements for each cell
+        for (let i = 0; i < GRID_SIZE; i++) {
+            for (let j = 0; j < GRID_SIZE; j++) {
+                if (grid[i][j] !== null) {
+                    // Check if this tile was merged in the last move
+                    const isMerged = mergedTiles.some(tile => 
+                        tile.row === i && tile.col === j
+                    );
+                    
+                    // Check if this tile was moved in the last move
+                    const isMoved = movedTiles.some(tile => 
+                        tile.row === i && tile.col === j
+                    );
+                    
+                    const tile = createTileElement(i, j, grid[i][j], false, isMerged);
+                    
+                    if (isMoved && !isMerged) {
+                        tile.classList.add('tile-moved');
+                    }
+                }
+            }
+        }
+        
+        // Reset merged and moved tiles arrays
+        mergedTiles = [];
+        movedTiles = [];
+        
+        // Update the score
+        scoreElement.textContent = score;
     }
 
     // Mostra l'animazione dell'aumento del punteggio
