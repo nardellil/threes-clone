@@ -461,41 +461,64 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchStartY = 0;
     let touchEndX = 0;
     let touchEndY = 0;
+    let isTouching = false;
 
     function handleTouchStart(event) {
+        if (gameOver) return;
+        
+        // Salva solo il primo tocco (ignora multi-touch)
+        if (event.touches.length > 1) return;
+        
+        isTouching = true;
         touchStartX = event.touches[0].clientX;
         touchStartY = event.touches[0].clientY;
+        
+        // Previeni lo scroll durante il gioco
+        event.preventDefault();
     }
 
     function handleTouchMove(event) {
+        if (!isTouching || gameOver) return;
+        
+        // Previeni lo scroll durante il gioco
         event.preventDefault();
     }
 
     function handleTouchEnd(event) {
-        if (gameOver) return;
+        if (!isTouching || gameOver) return;
         
+        isTouching = false;
         touchEndX = event.changedTouches[0].clientX;
         touchEndY = event.changedTouches[0].clientY;
         
         const deltaX = touchEndX - touchStartX;
         const deltaY = touchEndY - touchStartY;
         
-        // Determine the direction of the swipe
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            // Horizontal swipe
-            if (deltaX > 20) {
-                moveTiles('right');
-            } else if (deltaX < -20) {
-                moveTiles('left');
-            }
-        } else {
-            // Vertical swipe
-            if (deltaY > 20) {
-                moveTiles('down');
-            } else if (deltaY < -20) {
-                moveTiles('up');
+        // Usa una soglia minima per evitare movimenti accidentali
+        const minSwipeDistance = 30;
+        
+        // Determina la direzione dello swipe solo se il movimento è abbastanza ampio
+        if (Math.abs(deltaX) > minSwipeDistance || Math.abs(deltaY) > minSwipeDistance) {
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Swipe orizzontale
+                if (deltaX > 0) {
+                    moveTiles('right');
+                } else {
+                    moveTiles('left');
+                }
+            } else {
+                // Swipe verticale
+                if (deltaY > 0) {
+                    moveTiles('down');
+                } else {
+                    moveTiles('up');
+                }
             }
         }
+    }
+
+    function handleTouchCancel(event) {
+        isTouching = false;
     }
 
     // Event listeners
@@ -503,6 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gameContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
     gameContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
     gameContainer.addEventListener('touchend', handleTouchEnd);
+    gameContainer.addEventListener('touchcancel', handleTouchCancel);
     retryButton.addEventListener('click', initGame);
 
     // Start the game
