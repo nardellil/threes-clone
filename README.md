@@ -2,6 +2,8 @@
 
 A simple implementation of the popular Threes sliding tile puzzle game using HTML, CSS, and JavaScript.
 
+Demo: https://nardellil.github.io/threes-clone
+
 ## How to Play
 
 1. Open `index.html` in your web browser.
